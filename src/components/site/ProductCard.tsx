@@ -16,8 +16,10 @@ export interface ProductCardProduct {
 
 export function ProductCard({ product }: { product: ProductCardProduct }) {
   const { locale } = useLocale();
-  const name = pickLocalized(product, "name", locale);
-  const categoryName = product.category ? pickLocalized(product.category, "name", locale) : null;
+  const name = pickLocalized(product as unknown as Record<string, unknown>, "name", locale);
+  const categoryName = product.category
+    ? pickLocalized(product.category as unknown as Record<string, unknown>, "name", locale)
+    : null;
   const cover = product.product_images?.slice().sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
   const isNew = product.created_at
     ? Date.now() - new Date(product.created_at).getTime() < 14 * 24 * 60 * 60 * 1000
