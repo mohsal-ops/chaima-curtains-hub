@@ -55,12 +55,7 @@ export function useLocale() {
 }
 
 /** Picks the locale-appropriate field from a row like `{ name_ar, name_fr }`. */
-export function pickLocalized<T extends Record<string, unknown>>(
-  row: T,
-  base: string,
-  locale: Locale,
-): string {
-  const key = `${base}_${locale}` as keyof T;
-  const val = row[key];
+export function pickLocalized(row: Record<string, unknown>, base: string, locale: Locale): string {
+  const val = row[`${base}_${locale}`];
   return typeof val === "string" ? val : "";
 }
