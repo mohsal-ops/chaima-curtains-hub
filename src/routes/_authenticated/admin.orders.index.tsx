@@ -54,13 +54,13 @@ function OrdersListPage() {
               className="sm:w-64"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  navigate({ to: "/admin/orders", search: (p) => ({ ...p, q: (e.target as HTMLInputElement).value }) });
+                  navigate({ to: "/admin/orders", search: (p: any) => ({ ...p, q: (e.target as HTMLInputElement).value }) });
                 }
               }}
             />
             <Select
               value={search.status}
-              onValueChange={(v) => navigate({ to: "/admin/orders", search: (p) => ({ ...p, status: v as any }) })}
+              onValueChange={(v) => navigate({ to: "/admin/orders", search: (p: any) => ({ ...p, status: v as any }) })}
             >
               <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>
               <SelectContent>
