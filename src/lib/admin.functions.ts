@@ -189,8 +189,7 @@ export const updateAppointment = createServerFn({ method: "POST" })
     if (data.confirmed_date !== undefined) patch.confirmed_date = data.confirmed_date;
     if (data.admin_notes !== undefined) patch.admin_notes = data.admin_notes;
     if (data.travel_cost !== undefined) patch.travel_cost = data.travel_cost;
-    const { error } = await context.supabase
-      .from("appointments")
+    const { error } = await (context.supabase.from("appointments") as any)
       .update(patch)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
