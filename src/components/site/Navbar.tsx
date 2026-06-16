@@ -59,14 +59,6 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
-          <Link
-            to="/auth"
-            className="ms-1 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
-            aria-label="Admin login"
-          >
-            <LogIn className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Admin</span>
-          </Link>
           <button
             onClick={toggle}
             className="ms-2 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
