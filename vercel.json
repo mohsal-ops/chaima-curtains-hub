@@ -1,16 +1,5 @@
 {
   "buildCommand": "bun run build",
   "outputDirectory": ".output/public",
-  "framework": null,
-  "functions": {
-    "src/server.ts": {
-      "runtime": "edge"
-    }
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/src/server.ts"
-    }
-  ]
+  "framework": null
 }
