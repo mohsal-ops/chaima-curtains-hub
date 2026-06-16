@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, X, Languages } from "lucide-react";
+import { Menu, X, Languages, LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocale } from "@/lib/i18n";
 import { useSettings } from "@/hooks/useSettings";
@@ -59,6 +59,14 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          <Link
+            to="/auth"
+            className="ms-1 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+            aria-label="Admin login"
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Admin</span>
+          </Link>
           <button
             onClick={toggle}
             className="ms-2 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
@@ -94,6 +102,14 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <Link
+              to="/auth"
+              onClick={() => setOpen(false)}
+              className="rounded-md px-4 py-3 text-sm font-medium text-foreground hover:bg-primary-light inline-flex items-center gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              Admin
+            </Link>
             <button
               onClick={() => {
                 toggle();
