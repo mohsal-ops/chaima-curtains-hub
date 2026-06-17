@@ -55,39 +55,39 @@
 :root {
   --radius: 0.75rem;
 
-  /* Brand palette (terracotta + gold) translated to oklch */
-  --background: oklch(0.975 0.008 60);             /* #F8F5F2 warm off-white */
-  --foreground: oklch(0.22 0.01 60);                /* #2C2C2A */
+  /* Brand palette — Tringle Accessoires: golden yellow on warm cream */
+  --background: oklch(0.98 0.012 90);              /* warm cream */
+  --foreground: oklch(0.20 0.01 80);                /* near black */
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.01 60);
+  --card-foreground: oklch(0.20 0.01 80);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.01 60);
+  --popover-foreground: oklch(0.20 0.01 80);
 
-  --primary: oklch(0.52 0.07 38);                   /* #8B5E52 terracotta */
-  --primary-foreground: oklch(0.985 0.005 60);
-  --primary-dark: oklch(0.43 0.065 38);             /* #6D4740 */
-  --primary-light: oklch(0.94 0.018 38);            /* #F0E8E5 */
+  --primary: oklch(0.78 0.16 88);                   /* #E0B020 golden yellow */
+  --primary-foreground: oklch(0.18 0.02 80);        /* dark for contrast on gold */
+  --primary-dark: oklch(0.64 0.15 78);              /* deep gold */
+  --primary-light: oklch(0.96 0.05 92);             /* pale gold tint */
 
-  --secondary: oklch(0.96 0.012 60);
-  --secondary-foreground: oklch(0.32 0.04 38);
+  --secondary: oklch(0.96 0.018 88);
+  --secondary-foreground: oklch(0.28 0.04 80);
 
-  --muted: oklch(0.96 0.008 60);
-  --muted-foreground: oklch(0.52 0.015 60);         /* #7A7873 */
+  --muted: oklch(0.96 0.012 88);
+  --muted-foreground: oklch(0.50 0.018 80);
 
-  --accent: oklch(0.78 0.085 70);                   /* #D4A574 gold */
-  --accent-foreground: oklch(0.22 0.01 60);
-  --accent-light: oklch(0.96 0.022 70);             /* #FAF0E6 */
+  --accent: oklch(0.58 0.13 70);                    /* bronze accent */
+  --accent-foreground: oklch(0.98 0.012 90);
+  --accent-light: oklch(0.96 0.04 80);
 
-  --destructive: oklch(0.55 0.18 22);               /* #C0392B */
+  --destructive: oklch(0.55 0.18 22);
   --destructive-foreground: oklch(0.985 0.005 60);
 
-  --success: oklch(0.48 0.09 158);                  /* #2D6A4F */
-  --warning: oklch(0.68 0.16 50);                   /* #E07B39 */
+  --success: oklch(0.48 0.09 158);
+  --warning: oklch(0.68 0.16 50);
 
-  --border: oklch(0.9 0.012 50);                    /* #E5DDD9 */
-  --input: oklch(0.9 0.012 50);
-  --ring: oklch(0.52 0.07 38);
+  --border: oklch(0.9 0.025 85);
+  --input: oklch(0.9 0.025 85);
+  --ring: oklch(0.78 0.16 88);
 }
 
 @layer base {

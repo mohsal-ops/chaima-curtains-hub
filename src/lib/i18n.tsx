@@ -15,13 +15,13 @@ interface LocaleCtx {
 const Ctx = createContext<LocaleCtx | null>(null);
 
 function readInitial(): Locale {
-  if (typeof window === "undefined") return "ar";
+  if (typeof window === "undefined") return "fr";
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "fr" ? "fr" : "ar";
+  return stored === "ar" ? "ar" : "fr";
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("ar");
+  const [locale, setLocaleState] = useState<Locale>("fr");
 
   useEffect(() => {
     setLocaleState(readInitial());
