@@ -14,7 +14,7 @@ import heroImage from "@/assets/hero-curtains.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Tringle Accessoires — شعيمة ريدو | ستائر وديكور في الجزائر" },
+      { title: "Tringle Accessoires — ترينقل أكسسوار | ستائر وديكور في الجزائر" },
       {
         name: "description",
         content:
