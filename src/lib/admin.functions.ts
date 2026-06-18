@@ -309,7 +309,7 @@ export const upsertProduct = createServerFn({ method: "POST" })
       productId = inserted.id;
     }
     // replace images
-    await context.supabase.from("product_images").delete().eq("product_id", productId);
+    await context.supabase.from("product_images").delete().eq("product_id", productId as string);
     if (images.length > 0) {
       const { error: imgErr } = await (context.supabase.from("product_images") as any).insert(
         images.map((img, i) => ({ product_id: productId, url: img.url, sort_order: img.sort_order ?? i })),
