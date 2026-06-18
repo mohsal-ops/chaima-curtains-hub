@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, ShoppingBag, CalendarClock, LogOut, ExternalLink } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, CalendarClock, Package, LogOut, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -16,6 +16,7 @@ const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { to: "/admin/appointments", label: "Appointments", icon: CalendarClock },
+  { to: "/admin/products", label: "Products", icon: Package },
 ];
 
 function AdminLayout() {

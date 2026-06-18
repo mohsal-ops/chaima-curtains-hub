@@ -226,3 +226,106 @@ export const getAdminStats = createServerFn({ method: "GET" })
       upcomingAppointments: upcomingAppts.count ?? 0,
     };
   });
+
+/* ---------- PRODUCTS ---------- */
+
+export const listAdminProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { search?: string; category_id?: string; active?: "all" | "active" | "inactive" }) => d)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    let q = context.supabase
+      .from("products")
+      .select("id, name_fr, name_ar, slug, price, is_active, is_featured, sort_order, category_id, category:categories(name_fr,name_ar), images:product_images(id,url,sort_order)")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (data.search) {
+      const s = `%${data.search}%`;
+      q = q.or(`name_fr.ilike.${s},name_ar.ilike.${s},slug.ilike.${s}`);
+    }
+    if (data.category_id) q = q.eq("category_id", data.category_id);
+    if (data.active === "active") q = q.eq("is_active", true);
+    if (data.active === "inactive") q = q.eq("is_active", false);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return { products: rows ?? [] };
+  });
+
+export const getAdminProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data: product, error } = await context.supabase
+      .from("products")
+      .select("*, images:product_images(id,url,sort_order)")
+      .eq("id", data.id)
+      .single();
+    if (error) throw new Error(error.message);
+    return { product };
+  });
+
+export const listCategories = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase
+      .from("categories")
+      .select("id, name_fr, name_ar, slug")
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { categories: data ?? [] };
+  });
+
+const productSchema = z.object({
+  id: z.string().uuid().optional(),
+  name_fr: z.string().trim().min(1).max(200),
+  name_ar: z.string().trim().min(1).max(200),
+  slug: z.string().trim().min(1).max(200).regex(/^[a-z0-9-]+$/, "lowercase letters, numbers, dashes only"),
+  description_fr: z.string().max(5000).optional().nullable(),
+  description_ar: z.string().max(5000).optional().nullable(),
+  price: z.number().nonnegative(),
+  category_id: z.string().uuid().nullable().optional(),
+  is_active: z.boolean(),
+  is_featured: z.boolean(),
+  sort_order: z.number().int().default(0),
+  images: z.array(z.object({ url: z.string().url(), sort_order: z.number().int().default(0) })).default([]),
+});
+
+export const upsertProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => productSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { id, images, ...fields } = data;
+    let productId = id;
+    if (id) {
+      const { error } = await (context.supabase.from("products") as any).update(fields).eq("id", id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { data: inserted, error } = await (context.supabase.from("products") as any).insert(fields).select("id").single();
+      if (error) throw new Error(error.message);
+      productId = inserted.id;
+    }
+    // replace images
+    await context.supabase.from("product_images").delete().eq("product_id", productId as string);
+    if (images.length > 0) {
+      const { error: imgErr } = await (context.supabase.from("product_images") as any).insert(
+        images.map((img, i) => ({ product_id: productId, url: img.url, sort_order: img.sort_order ?? i })),
+      );
+      if (imgErr) throw new Error(imgErr.message);
+    }
+    return { ok: true, id: productId };
+  });
+
+export const deleteProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    await context.supabase.from("product_images").delete().eq("product_id", data.id);
+    const { error } = await context.supabase.from("products").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
