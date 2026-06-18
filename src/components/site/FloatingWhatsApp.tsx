@@ -7,10 +7,11 @@ export function FloatingWhatsApp() {
   const { t } = useLocale();
   const wa = get("whatsapp_number");
   if (!wa) return null;
+  const waDigits = wa.replace(/\D/g, "");
 
   return (
     <a
-      href={`https://wa.me/${wa}`}
+      href={`https://wa.me/${waDigits}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t({ ar: "تواصل معنا على واتساب", fr: "Contactez-nous sur WhatsApp" })}
