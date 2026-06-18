@@ -110,7 +110,7 @@ export function Footer() {
                 </a>
               )}
               {wa && (
-                <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+                <a href={`https://wa.me/${wa.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
                   className="grid h-10 w-10 place-items-center rounded-full bg-primary-foreground/10 hover:bg-accent hover:text-primary-dark transition-colors">
                   <Phone className="h-4 w-4" />
                 </a>
