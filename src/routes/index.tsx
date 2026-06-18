@@ -14,13 +14,13 @@ import heroImage from "@/assets/hero-curtains.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Chaima Rideaux — شعيمة ريدو | ستائر وديكور في الجزائر" },
+      { title: "Tringle Accessoires — شعيمة ريدو | ستائر وديكور في الجزائر" },
       {
         name: "description",
         content:
           "تشكيلة واسعة من الستائر، السكك والإكسسوارات. زيارة منزلية مجانية وتركيب احترافي في جميع ولايات الجزائر.",
       },
-      { property: "og:title", content: "Chaima Rideaux — ستائر وديكور في الجزائر" },
+      { property: "og:title", content: "Tringle Accessoires — ستائر وديكور في الجزائر" },
       { property: "og:description", content: "زيارة منزلية مجانية وتركيب احترافي." },
     ],
   }),

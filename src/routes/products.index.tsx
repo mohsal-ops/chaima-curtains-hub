@@ -13,9 +13,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/products/")({
   head: () => ({
     meta: [
-      { title: "المنتجات | Catalogue — Chaima Rideaux" },
+      { title: "المنتجات | Catalogue — Tringle Accessoires" },
       { name: "description", content: "Découvrez notre catalogue complet de rideaux, rails et accessoires." },
-      { property: "og:title", content: "Catalogue — Chaima Rideaux" },
+      { property: "og:title", content: "Catalogue — Tringle Accessoires" },
       { property: "og:description", content: "Rideaux, rails et accessoires de qualité." },
     ],
   }),
