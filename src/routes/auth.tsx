@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Sign in — Chaima Rideaux Admin" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Tringle Accessoires Admin" }] }),
   component: AuthPage,
 });
 
@@ -27,7 +27,7 @@ function AuthPage() {
     <div dir="ltr" className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center">Chaima Rideaux — Admin</CardTitle>
+          <CardTitle className="text-center">Tringle Accessoires — Admin</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">

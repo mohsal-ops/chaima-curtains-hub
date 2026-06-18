@@ -18,7 +18,7 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const siteName = locale === "ar" ? get("site_name_ar", "شعيمة ريدو") : get("site_name_fr", "Chaima Rideaux");
+  const siteName = locale === "ar" ? get("site_name_ar", "ترينقل أكسسوار") : get("site_name_fr", "Tringle Accessoires");
   const logoUrl = get("site_logo_url");
 
   const navLinks = [
