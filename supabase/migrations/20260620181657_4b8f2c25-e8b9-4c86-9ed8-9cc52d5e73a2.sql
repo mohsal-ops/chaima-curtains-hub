@@ -1,0 +1,1 @@
+DELETE FROM public.settings WHERE key IN ('hero_images','hero_image_url');
