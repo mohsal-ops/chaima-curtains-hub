@@ -19,7 +19,9 @@ export function Navbar() {
   }, []);
 
   const siteName = locale === "ar" ? get("site_name_ar", "ترينقل أكسسوار") : get("site_name_fr", "Tringle Accessoires");
-  const logoUrl = get("site_logo_url");
+  const rawLogoUrl = get("site_logo_url");
+  const logoUrl = rawLogoUrl && !rawLogoUrl.includes("/__l5e/assets-v1/") ? rawLogoUrl : "/tringle-logo.jpg";
+
 
   const navLinks = [
     { to: "/", label: t({ ar: "الرئيسية", fr: "Accueil" }) },
