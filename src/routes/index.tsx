@@ -9,13 +9,15 @@ import { AppointmentForm } from "@/components/site/AppointmentForm";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/lib/i18n";
 import { useSettings } from "@/hooks/useSettings";
-import hero0 from "@/assets/hero-0.webp.asset.json";
-import hero1 from "@/assets/hero-1.webp.asset.json";
-import hero2 from "@/assets/hero-2.webp.asset.json";
-import hero3 from "@/assets/hero-3.webp.asset.json";
-import hero4 from "@/assets/hero-4.webp.asset.json";
 
-const DEFAULT_HERO_IMAGES = [hero0.url, hero1.url, hero2.url, hero3.url, hero4.url];
+const DEFAULT_HERO_IMAGES = [
+  "/hero-0.webp",
+  "/hero-1.webp",
+  "/hero-2.webp",
+  "/hero-3.webp",
+  "/hero-4.webp",
+];
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
