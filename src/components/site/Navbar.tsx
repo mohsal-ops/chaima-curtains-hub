@@ -38,16 +38,17 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
         <Link to="/" className="flex items-center gap-3 group">
           {logoUrl ? (
-            <img src={logoUrl} alt={siteName} className="h-10 w-10 rounded-full object-cover" />
+            <img src={logoUrl} alt={siteName} className="h-12 w-12 rounded-full object-cover border border-border bg-white" />
           ) : (
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-soft">
-              CR
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-soft">
+              TA
             </span>
           )}
           <span className="text-base md:text-lg font-semibold tracking-tight text-foreground group-hover:text-primary transition-colors">
             {siteName}
           </span>
         </Link>
+
 
         <nav className="hidden md:flex items-center gap-2">
           {navLinks.map((l) => (
