@@ -43,7 +43,7 @@ function HomePage() {
   const heroImages = useMemo(() => {
     const raw = get("hero_images") || get("hero_image_url") || "";
     const list = raw.split(",").map((s) => s.trim()).filter(Boolean);
-    return list.length ? list : [heroImage];
+    return list.length ? list : DEFAULT_HERO_IMAGES;
   }, [get]);
 
   const [slide, setSlide] = useState(0);
