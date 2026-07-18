@@ -185,6 +185,7 @@ function ProductDetailPage() {
               name_fr: p.name_fr,
               price: Number(p.price),
               cover_url: cover,
+              sizes: (p as any).sizes ?? [],
             }}
           />
         </div>
