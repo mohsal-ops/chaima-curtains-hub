@@ -236,7 +236,7 @@ export const listAdminProducts = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     let q = context.supabase
       .from("products")
-      .select("id, name_fr, name_ar, slug, price, is_active, is_featured, sort_order, category_id, category:categories(name_fr,name_ar), images:product_images(id,url,sort_order)")
+      .select("id, name_fr, name_ar, slug, price, is_active, is_featured, sort_order, sizes, category_id, category:categories(name_fr,name_ar), images:product_images(id,url,sort_order)")
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false })
       .limit(500);
@@ -290,6 +290,7 @@ const productSchema = z.object({
   is_active: z.boolean(),
   is_featured: z.boolean(),
   sort_order: z.number().int().default(0),
+  sizes: z.array(z.string().trim().min(1).max(40)).max(50).default([]),
   images: z.array(z.object({ url: z.string().url(), sort_order: z.number().int().default(0) })).default([]),
 });
 

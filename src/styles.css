@@ -136,9 +136,21 @@
   .animate-pulse-slow {
     animation: pulse-slow 2.4s ease-in-out infinite;
   }
+  .animate-wiggle {
+    animation: wiggle 1.6s ease-in-out infinite;
+    transform-origin: 50% 50%;
+  }
 }
 
 @keyframes pulse-slow {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 55%, transparent); }
   50%      { box-shadow: 0 0 0 16px color-mix(in oklab, var(--primary) 0%, transparent); }
+}
+
+@keyframes wiggle {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-14deg); }
+  80% { transform: rotate(12deg); }
+  90% { transform: rotate(-8deg); }
+  95% { transform: rotate(4deg); }
 }

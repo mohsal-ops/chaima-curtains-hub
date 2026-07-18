@@ -337,6 +337,7 @@ export type Database = {
           name_ar: string
           name_fr: string
           price: number
+          sizes: string[]
           slug: string
           sort_order: number
           updated_at: string
@@ -356,6 +357,7 @@ export type Database = {
           name_ar: string
           name_fr: string
           price?: number
+          sizes?: string[]
           slug: string
           sort_order?: number
           updated_at?: string
@@ -375,6 +377,7 @@ export type Database = {
           name_ar?: string
           name_fr?: string
           price?: number
+          sizes?: string[]
           slug?: string
           sort_order?: number
           updated_at?: string
