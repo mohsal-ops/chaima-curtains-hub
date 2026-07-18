@@ -140,6 +140,33 @@ export function OrderForm({ product }: { product: Product }) {
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-elegant">
       <h3 className="text-lg font-bold">{t({ ar: "طلب المنتج", fr: "Commander ce produit" })}</h3>
 
+      {hasSizes && (
+        <div className="space-y-2">
+          <Label>{t({ ar: "اختر الطول", fr: "Choisir la longueur" })} *</Label>
+          <div className="flex flex-wrap gap-2">
+            {product.sizes!.map((s) => {
+              const selected = form.size === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setForm({ ...form, size: s })}
+                  className={cn(
+                    "min-w-[64px] rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-colors",
+                    selected
+                      ? "border-primary bg-primary text-primary-foreground shadow-soft"
+                      : "border-border bg-card hover:border-primary/50",
+                  )}
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>{t({ ar: "الاسم", fr: "Nom" })} *</Label>
