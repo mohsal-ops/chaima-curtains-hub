@@ -290,6 +290,7 @@ const productSchema = z.object({
   is_active: z.boolean(),
   is_featured: z.boolean(),
   sort_order: z.number().int().default(0),
+  sizes: z.array(z.string().trim().min(1).max(40)).max(50).default([]),
   images: z.array(z.object({ url: z.string().url(), sort_order: z.number().int().default(0) })).default([]),
 });
 

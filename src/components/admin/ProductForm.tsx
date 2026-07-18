@@ -29,6 +29,7 @@ interface Props {
     is_active?: boolean;
     is_featured?: boolean;
     sort_order?: number;
+    sizes?: string[] | null;
     images?: { url: string; sort_order: number }[];
   };
 }
@@ -57,6 +58,7 @@ export function ProductForm({ initial }: Props) {
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [isFeatured, setIsFeatured] = useState(initial?.is_featured ?? false);
   const [sortOrder, setSortOrder] = useState<string>((initial?.sort_order ?? 0).toString());
+  const [sizesText, setSizesText] = useState<string>((initial?.sizes ?? []).join(", "));
   const [images, setImages] = useState<Image[]>(initial?.images?.sort((a, b) => a.sort_order - b.sort_order) ?? []);
   const [uploading, setUploading] = useState(false);
 
@@ -109,6 +111,7 @@ export function ProductForm({ initial }: Props) {
         category_id: categoryId || null,
         is_active: isActive, is_featured: isFeatured,
         sort_order: Number(sortOrder) || 0,
+        sizes: sizesText.split(",").map((s) => s.trim()).filter(Boolean),
         images,
       } as any,
     }),
@@ -179,6 +182,15 @@ export function ProductForm({ initial }: Props) {
             <div className="space-y-1.5">
               <Label>Sort order</Label>
               <Input type="number" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Available sizes / lengths</Label>
+              <Input
+                value={sizesText}
+                onChange={(e) => setSizesText(e.target.value)}
+                placeholder="1m, 1.50m, 1.75m, 2m, 2.50m, 3m, 3.50m, 4m, 4.50m, 6m"
+              />
+              <p className="text-xs text-muted-foreground">Comma-separated. Shown as size buttons on the product page. Leave empty for products without sizes.</p>
             </div>
             <div className="flex items-center justify-between pt-2">
               <Label htmlFor="active" className="flex flex-col">
