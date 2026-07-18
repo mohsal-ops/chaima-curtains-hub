@@ -19,6 +19,7 @@ interface Product {
   name_fr: string;
   price: number;
   cover_url: string | null;
+  sizes?: string[];
 }
 
 interface State {
@@ -26,6 +27,7 @@ interface State {
   customer_phone: string;
   customer_email: string;
   quantity: number;
+  size: string | null;
   delivery_type: "home" | "office";
   wilaya_id: number | null;
   city_id: number | null;
@@ -38,6 +40,7 @@ const initial: State = {
   customer_phone: "",
   customer_email: "",
   quantity: 1,
+  size: null,
   delivery_type: "home",
   wilaya_id: null,
   city_id: null,
@@ -79,6 +82,7 @@ export function OrderForm({ product }: { product: Product }) {
     );
   }
 
+  const hasSizes = !!product.sizes && product.sizes.length > 0;
   const valid =
     form.customer_name.trim().length >= 2 &&
     PHONE_RE.test(form.customer_phone) &&
@@ -86,6 +90,7 @@ export function OrderForm({ product }: { product: Product }) {
     form.wilaya_id !== null &&
     form.city_id !== null &&
     form.quantity >= 1 &&
+    (!hasSizes || !!form.size) &&
     (form.delivery_type === "office" || form.address.trim().length > 0);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -105,6 +110,7 @@ export function OrderForm({ product }: { product: Product }) {
           name_fr: product.name_fr,
           price: product.price,
           image_url: product.cover_url,
+          size: form.size,
         },
         customer_name: form.customer_name.trim(),
         customer_phone: form.customer_phone,
@@ -116,7 +122,9 @@ export function OrderForm({ product }: { product: Product }) {
         wilaya_id: form.wilaya_id,
         city_id: form.city_id,
         address: form.address.trim() || null,
-        notes: form.notes.trim() || null,
+        notes: [form.size ? `${t({ ar: "الطول", fr: "Longueur" })}: ${form.size}` : null, form.notes.trim() || null]
+          .filter(Boolean)
+          .join(" — ") || null,
       });
       if (error) throw error;
       setSuccessNumber(orderNumber);
