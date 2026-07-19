@@ -259,7 +259,7 @@ export const getAdminProduct = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { data: product, error } = await context.supabase
       .from("products")
-      .select("*, images:product_images(id,url,sort_order)")
+      .select("*, images:product_images(id,url,sort_order), variants:product_variants(id,label,price,original_price,stock,sort_order)")
       .eq("id", data.id)
       .single();
     if (error) throw new Error(error.message);
