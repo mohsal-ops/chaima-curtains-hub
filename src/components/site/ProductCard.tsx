@@ -10,9 +10,12 @@ export interface ProductCardProduct {
   name_ar: string;
   name_fr: string;
   price: number;
+  original_price?: number | null;
+  has_variants?: boolean;
   created_at?: string | null;
   category?: { name_ar: string; name_fr: string } | null;
   product_images?: { url: string; sort_order: number }[] | null;
+  product_variants?: { price: number | string; original_price: number | string | null }[] | null;
 }
 
 export function ProductCard({ product }: { product: ProductCardProduct }) {
