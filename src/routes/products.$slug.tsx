@@ -1,12 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Copy, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ProductCard, ProductCardSkeleton } from "@/components/site/ProductCard";
-import { OrderForm } from "@/components/site/OrderForm";
+import { OrderForm, type Variant } from "@/components/site/OrderForm";
 import { Button } from "@/components/ui/button";
 import { useLocale, pickLocalized } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
