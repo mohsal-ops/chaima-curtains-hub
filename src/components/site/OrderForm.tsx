@@ -255,7 +255,7 @@ export function OrderForm({ product }: { product: Product }) {
             <Plus className="h-4 w-4" />
           </Button>
           <div className="ms-auto rounded-lg bg-primary-light px-4 py-2 text-sm">
-            <span className="text-muted-foreground">{form.quantity} × {formatPrice(product.price, locale)} = </span>
+            <span className="text-muted-foreground">{form.quantity} × {formatPrice(unitPrice, locale)} = </span>
             <strong className="text-primary text-base">{formatPrice(total, locale)}</strong>
           </div>
         </div>
