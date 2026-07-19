@@ -99,12 +99,34 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
       </div>
       <div className="p-4">
         <h3 className={cn("font-semibold text-foreground line-clamp-2 min-h-[2.5rem]")}>{name}</h3>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-lg font-bold text-primary">{formatPrice(product.price, locale)}</span>
-          <span className="text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
-            {locale === "ar" ? "عرض ←" : "Voir →"}
-          </span>
-        </div>
+        {(() => {
+          const variantPrices = (product.product_variants ?? []).map((v) => Number(v.price));
+          const hasVariants = !!product.has_variants && variantPrices.length > 0;
+          const minPrice = hasVariants ? Math.min(...variantPrices) : Number(product.price);
+          const maxPrice = hasVariants ? Math.max(...variantPrices) : Number(product.price);
+          const original = product.original_price != null ? Number(product.original_price) : null;
+          const showDiscount = !hasVariants && original != null && original > minPrice;
+          const pct = showDiscount ? Math.round(((original! - minPrice) / original!) * 100) : 0;
+          return (
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-lg font-bold text-primary">
+                  {formatPrice(minPrice, locale)}
+                  {hasVariants && maxPrice !== minPrice && <> – {formatPrice(maxPrice, locale)}</>}
+                </span>
+                {showDiscount && (
+                  <>
+                    <span className="text-xs text-muted-foreground line-through">{formatPrice(original!, locale)}</span>
+                    <span className="rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">-{pct}%</span>
+                  </>
+                )}
+              </div>
+              <span className="text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                {locale === "ar" ? "عرض ←" : "Voir →"}
+              </span>
+            </div>
+          );
+        })()}
       </div>
     </Link>
   );
