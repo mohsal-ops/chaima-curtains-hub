@@ -49,7 +49,7 @@ function CatalogPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,slug,name_ar,name_fr,description_ar,description_fr,price,created_at,category_id,categories(name_ar,name_fr),product_images(url,sort_order)")
+        .select("id,slug,name_ar,name_fr,description_ar,description_fr,price,original_price,has_variants,created_at,category_id,categories(name_ar,name_fr),product_images(url,sort_order),product_variants(price,original_price)")
         .eq("is_active", true)
         .order("sort_order");
       if (error) throw error;
