@@ -1,12 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronLeft, Copy, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ProductCard, ProductCardSkeleton } from "@/components/site/ProductCard";
-import { OrderForm } from "@/components/site/OrderForm";
+import { OrderForm, type Variant } from "@/components/site/OrderForm";
 import { Button } from "@/components/ui/button";
 import { useLocale, pickLocalized } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
@@ -38,12 +38,14 @@ function ProductDetailPage() {
   const { t, locale } = useLocale();
   const [activeImg, setActiveImg] = useState(0);
 
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
   const productQ = useQuery({
     queryKey: ["product", slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*,categories(id,name_ar,name_fr,slug),product_images(url,sort_order)")
+        .select("*,categories(id,name_ar,name_fr,slug),product_images(url,sort_order),product_variants(id,label,price,original_price,stock,sort_order)")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
@@ -91,6 +93,35 @@ function ProductDetailPage() {
   const categoryName = p.categories ? pickLocalized(p.categories as unknown as Record<string, unknown>, "name", locale) : null;
 
   const cover = images[activeImg]?.url ?? images[0]?.url ?? null;
+
+  const rawVariants = ((p as any).product_variants ?? []) as Array<{
+    id: string; label: string; price: number | string; original_price: number | string | null; stock: number | null; sort_order: number;
+  }>;
+  const variants: Variant[] = rawVariants
+    .map((v) => ({
+      id: v.id,
+      label: v.label,
+      price: Number(v.price),
+      original_price: v.original_price != null ? Number(v.original_price) : null,
+      stock: v.stock,
+      sort_order: v.sort_order,
+    }))
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const hasVariants = !!(p as any).has_variants && variants.length > 0;
+  const selectedVariant = hasVariants ? variants.find((v) => v.id === selectedVariantId) ?? null : null;
+
+  const displayPrice = selectedVariant ? selectedVariant.price : Number(p.price);
+  const displayOriginal = selectedVariant
+    ? selectedVariant.original_price
+    : (p as any).original_price != null ? Number((p as any).original_price) : null;
+  const hasDiscount = displayOriginal != null && displayOriginal > displayPrice;
+  const discountPct = hasDiscount ? Math.round(((displayOriginal! - displayPrice) / displayOriginal!) * 100) : 0;
+  const priceRange = hasVariants && !selectedVariant
+    ? {
+        min: Math.min(...variants.map((v) => v.price)),
+        max: Math.max(...variants.map((v) => v.price)),
+      }
+    : null;
 
   return (
     <SiteLayout>
@@ -147,7 +178,68 @@ function ProductDetailPage() {
             </span>
           )}
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{name}</h1>
-          <p className="text-3xl font-bold text-primary">{formatPrice(p.price, locale)}</p>
+
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              {priceRange ? (
+                <p className="text-3xl font-bold text-primary">
+                  {formatPrice(priceRange.min, locale)}
+                  {priceRange.max !== priceRange.min && <> – {formatPrice(priceRange.max, locale)}</>}
+                </p>
+              ) : (
+                <p className="text-3xl font-bold text-primary">{formatPrice(displayPrice, locale)}</p>
+              )}
+              {hasDiscount && !priceRange && (
+                <>
+                  <span className="text-lg text-muted-foreground line-through">
+                    {formatPrice(displayOriginal!, locale)}
+                  </span>
+                  <span className="rounded-md bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
+                    -{discountPct}%
+                  </span>
+                </>
+              )}
+            </div>
+            {hasDiscount && !priceRange && (
+              <span className="inline-block rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
+                {t({ ar: "تخفيض!", fr: "Promo !" })}
+              </span>
+            )}
+          </div>
+
+          {hasVariants && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t({ ar: "اختر الطول", fr: "Choisir la longueur" })} *
+              </label>
+              <select
+                value={selectedVariantId ?? ""}
+                onChange={(e) => setSelectedVariantId(e.target.value || null)}
+                className="w-full rounded-lg border-2 border-border bg-card px-3 py-2.5 text-sm font-semibold focus:border-primary focus:outline-none"
+              >
+                <option value="" disabled>
+                  {t({ ar: "— اختر أحد الخيارات —", fr: "— Choisir une option —" })}
+                </option>
+                {variants.map((v) => {
+                  const outOfStock = v.stock != null && v.stock <= 0;
+                  return (
+                    <option key={v.id} value={v.id} disabled={outOfStock}>
+                      {v.label} — {formatPrice(v.price, locale)}
+                      {outOfStock ? ` (${t({ ar: "نفذ", fr: "épuisé" })})` : ""}
+                    </option>
+                  );
+                })}
+              </select>
+              {!selectedVariant && (
+                <p className="text-xs text-muted-foreground">
+                  {t({
+                    ar: "الرجاء اختيار خيار قبل إتمام الطلب",
+                    fr: "Veuillez choisir une option pour continuer",
+                  })}
+                </p>
+              )}
+            </div>
+          )}
 
           {description && (
             <div className="prose prose-sm max-w-none text-foreground/85 leading-relaxed">
@@ -185,8 +277,12 @@ function ProductDetailPage() {
               name_fr: p.name_fr,
               price: Number(p.price),
               cover_url: cover,
-              sizes: (p as any).sizes ?? [],
+              sizes: hasVariants ? [] : ((p as any).sizes ?? []),
+              has_variants: hasVariants,
+              variants,
             }}
+            variantId={hasVariants ? selectedVariantId : undefined}
+            onVariantIdChange={hasVariants ? setSelectedVariantId : undefined}
           />
         </div>
       </div>

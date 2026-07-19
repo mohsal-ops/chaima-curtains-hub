@@ -13,6 +13,15 @@ import { cn } from "@/lib/utils";
 
 const PHONE_RE = /^(05|06|07)\d{8}$/;
 
+export interface Variant {
+  id: string;
+  label: string;
+  price: number;
+  original_price: number | null;
+  stock: number | null;
+  sort_order: number;
+}
+
 interface Product {
   id: string;
   name_ar: string;
@@ -20,6 +29,8 @@ interface Product {
   price: number;
   cover_url: string | null;
   sizes?: string[];
+  has_variants?: boolean;
+  variants?: Variant[];
 }
 
 interface State {
@@ -28,6 +39,7 @@ interface State {
   customer_email: string;
   quantity: number;
   size: string | null;
+  variant_id: string | null;
   delivery_type: "home" | "office";
   wilaya_id: number | null;
   city_id: number | null;
@@ -41,6 +53,7 @@ const initial: State = {
   customer_email: "",
   quantity: 1,
   size: null,
+  variant_id: null,
   delivery_type: "home",
   wilaya_id: null,
   city_id: null,
@@ -48,13 +61,36 @@ const initial: State = {
   notes: "",
 };
 
-export function OrderForm({ product }: { product: Product }) {
+export function OrderForm({
+  product,
+  variantId: controlledVariantId,
+  onVariantIdChange,
+}: {
+  product: Product;
+  variantId?: string | null;
+  onVariantIdChange?: (id: string | null) => void;
+}) {
   const { t, locale } = useLocale();
   const [form, setForm] = useState<State>(initial);
   const [submitting, setSubmitting] = useState(false);
   const [successNumber, setSuccessNumber] = useState<string | null>(null);
 
-  const total = product.price * form.quantity;
+  const hasVariants = !!product.has_variants && !!product.variants && product.variants.length > 0;
+  const sortedVariants = hasVariants
+    ? [...product.variants!].sort((a, b) => a.sort_order - b.sort_order)
+    : [];
+  const isControlled = controlledVariantId !== undefined && !!onVariantIdChange;
+  const activeVariantId = isControlled ? controlledVariantId ?? null : form.variant_id;
+  const setVariantId = (id: string | null) => {
+    if (isControlled) onVariantIdChange!(id);
+    else setForm({ ...form, variant_id: id });
+  };
+  const selectedVariant = hasVariants
+    ? sortedVariants.find((v) => v.id === activeVariantId) ?? null
+    : null;
+
+  const unitPrice = selectedVariant ? selectedVariant.price : product.price;
+  const total = unitPrice * form.quantity;
 
   if (successNumber) {
     return (
@@ -66,7 +102,7 @@ export function OrderForm({ product }: { product: Product }) {
         <p className="mt-2 text-muted-foreground">{t({ ar: "رقم الطلب", fr: "Numéro de commande" })}</p>
         <p className="mt-1 text-2xl font-mono font-bold text-primary" dir="ltr">{successNumber}</p>
         <div className="mt-4 inline-block rounded-lg bg-secondary/50 px-4 py-2 text-sm">
-          {form.quantity} × {formatPrice(product.price, locale)} ={" "}
+          {form.quantity} × {formatPrice(unitPrice, locale)} ={" "}
           <strong className="text-primary">{formatPrice(total, locale)}</strong>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
@@ -82,7 +118,7 @@ export function OrderForm({ product }: { product: Product }) {
     );
   }
 
-  const hasSizes = !!product.sizes && product.sizes.length > 0;
+  const hasSizes = !hasVariants && !!product.sizes && product.sizes.length > 0;
   const valid =
     form.customer_name.trim().length >= 2 &&
     PHONE_RE.test(form.customer_phone) &&
@@ -91,6 +127,7 @@ export function OrderForm({ product }: { product: Product }) {
     form.city_id !== null &&
     form.quantity >= 1 &&
     (!hasSizes || !!form.size) &&
+    (!hasVariants || !!selectedVariant) &&
     (form.delivery_type === "office" || form.address.trim().length > 0);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -102,29 +139,33 @@ export function OrderForm({ product }: { product: Product }) {
       if (numErr || !numData) throw numErr ?? new Error("number");
       const orderNumber = numData as unknown as string;
 
+      const variantLabel = selectedVariant?.label ?? form.size ?? null;
       const { error } = await supabase.from("orders").insert({
         order_number: orderNumber,
         product_id: product.id,
         product_snapshot: {
           name_ar: product.name_ar,
           name_fr: product.name_fr,
-          price: product.price,
+          price: unitPrice,
           image_url: product.cover_url,
-          size: form.size,
+          size: variantLabel,
+          variant_id: selectedVariant?.id ?? null,
+          variant_label: selectedVariant?.label ?? null,
         },
         customer_name: form.customer_name.trim(),
         customer_phone: form.customer_phone,
         customer_email: form.customer_email.trim() || null,
         quantity: form.quantity,
-        unit_price: product.price,
+        unit_price: unitPrice,
         total_price: total,
         delivery_type: form.delivery_type,
         wilaya_id: form.wilaya_id,
         city_id: form.city_id,
         address: form.address.trim() || null,
-        notes: [form.size ? `${t({ ar: "الطول", fr: "Longueur" })}: ${form.size}` : null, form.notes.trim() || null]
-          .filter(Boolean)
-          .join(" — ") || null,
+        notes: [
+          variantLabel ? `${t({ ar: "الخيار", fr: "Option" })}: ${variantLabel}` : null,
+          form.notes.trim() || null,
+        ].filter(Boolean).join(" — ") || null,
       });
       if (error) throw error;
       setSuccessNumber(orderNumber);
@@ -139,6 +180,31 @@ export function OrderForm({ product }: { product: Product }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-elegant">
       <h3 className="text-lg font-bold">{t({ ar: "طلب المنتج", fr: "Commander ce produit" })}</h3>
+
+      {hasVariants && !isControlled && (
+        <div className="space-y-2">
+          <Label>{t({ ar: "اختر أحد الخيارات", fr: "Choisir une option" })} *</Label>
+          <select
+            value={activeVariantId ?? ""}
+            onChange={(e) => setVariantId(e.target.value || null)}
+            className="w-full rounded-lg border-2 border-border bg-card px-3 py-2.5 text-sm font-semibold focus:border-primary focus:outline-none"
+            required
+          >
+            <option value="" disabled>
+              {t({ ar: "— اختر —", fr: "— Sélectionner —" })}
+            </option>
+            {sortedVariants.map((v) => {
+              const outOfStock = v.stock != null && v.stock <= 0;
+              return (
+                <option key={v.id} value={v.id} disabled={outOfStock}>
+                  {v.label} — {formatPrice(v.price, locale)}
+                  {outOfStock ? ` (${t({ ar: "نفذ", fr: "épuisé" })})` : ""}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      )}
 
       {hasSizes && (
         <div className="space-y-2">
@@ -165,6 +231,8 @@ export function OrderForm({ product }: { product: Product }) {
           </div>
         </div>
       )}
+
+
 
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -201,7 +269,7 @@ export function OrderForm({ product }: { product: Product }) {
             <Plus className="h-4 w-4" />
           </Button>
           <div className="ms-auto rounded-lg bg-primary-light px-4 py-2 text-sm">
-            <span className="text-muted-foreground">{form.quantity} × {formatPrice(product.price, locale)} = </span>
+            <span className="text-muted-foreground">{form.quantity} × {formatPrice(unitPrice, locale)} = </span>
             <strong className="text-primary text-base">{formatPrice(total, locale)}</strong>
           </div>
         </div>
