@@ -13,6 +13,15 @@ import { cn } from "@/lib/utils";
 
 const PHONE_RE = /^(05|06|07)\d{8}$/;
 
+export interface Variant {
+  id: string;
+  label: string;
+  price: number;
+  original_price: number | null;
+  stock: number | null;
+  sort_order: number;
+}
+
 interface Product {
   id: string;
   name_ar: string;
@@ -20,6 +29,8 @@ interface Product {
   price: number;
   cover_url: string | null;
   sizes?: string[];
+  has_variants?: boolean;
+  variants?: Variant[];
 }
 
 interface State {
@@ -28,6 +39,7 @@ interface State {
   customer_email: string;
   quantity: number;
   size: string | null;
+  variant_id: string | null;
   delivery_type: "home" | "office";
   wilaya_id: number | null;
   city_id: number | null;
@@ -41,6 +53,7 @@ const initial: State = {
   customer_email: "",
   quantity: 1,
   size: null,
+  variant_id: null,
   delivery_type: "home",
   wilaya_id: null,
   city_id: null,
