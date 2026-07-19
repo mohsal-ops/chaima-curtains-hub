@@ -278,6 +278,15 @@ export const listCategories = createServerFn({ method: "GET" })
     return { categories: data ?? [] };
   });
 
+const variantSchema = z.object({
+  id: z.string().uuid().optional(),
+  label: z.string().trim().min(1).max(80),
+  price: z.number().nonnegative(),
+  original_price: z.number().nonnegative().nullable().optional(),
+  stock: z.number().int().nullable().optional(),
+  sort_order: z.number().int().default(0),
+});
+
 const productSchema = z.object({
   id: z.string().uuid().optional(),
   name_fr: z.string().trim().min(1).max(200),
@@ -286,12 +295,15 @@ const productSchema = z.object({
   description_fr: z.string().max(5000).optional().nullable(),
   description_ar: z.string().max(5000).optional().nullable(),
   price: z.number().nonnegative(),
+  original_price: z.number().nonnegative().nullable().optional(),
+  has_variants: z.boolean().default(false),
   category_id: z.string().uuid().nullable().optional(),
   is_active: z.boolean(),
   is_featured: z.boolean(),
   sort_order: z.number().int().default(0),
   sizes: z.array(z.string().trim().min(1).max(40)).max(50).default([]),
   images: z.array(z.object({ url: z.string().url(), sort_order: z.number().int().default(0) })).default([]),
+  variants: z.array(variantSchema).max(100).default([]),
 });
 
 export const upsertProduct = createServerFn({ method: "POST" })
@@ -299,7 +311,7 @@ export const upsertProduct = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => productSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { id, images, ...fields } = data;
+    const { id, images, variants, ...fields } = data;
     let productId = id;
     if (id) {
       const { error } = await (context.supabase.from("products") as any).update(fields).eq("id", id);
@@ -309,13 +321,26 @@ export const upsertProduct = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       productId = inserted.id;
     }
-    // replace images
     await context.supabase.from("product_images").delete().eq("product_id", productId as string);
     if (images.length > 0) {
       const { error: imgErr } = await (context.supabase.from("product_images") as any).insert(
         images.map((img, i) => ({ product_id: productId, url: img.url, sort_order: img.sort_order ?? i })),
       );
       if (imgErr) throw new Error(imgErr.message);
+    }
+    await context.supabase.from("product_variants").delete().eq("product_id", productId as string);
+    if (variants.length > 0) {
+      const { error: vErr } = await (context.supabase.from("product_variants") as any).insert(
+        variants.map((v, i) => ({
+          product_id: productId,
+          label: v.label,
+          price: v.price,
+          original_price: v.original_price ?? null,
+          stock: v.stock ?? null,
+          sort_order: v.sort_order ?? i,
+        })),
+      );
+      if (vErr) throw new Error(vErr.message);
     }
     return { ok: true, id: productId };
   });
