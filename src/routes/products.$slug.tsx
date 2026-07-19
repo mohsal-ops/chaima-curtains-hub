@@ -38,12 +38,14 @@ function ProductDetailPage() {
   const { t, locale } = useLocale();
   const [activeImg, setActiveImg] = useState(0);
 
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
   const productQ = useQuery({
     queryKey: ["product", slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*,categories(id,name_ar,name_fr,slug),product_images(url,sort_order)")
+        .select("*,categories(id,name_ar,name_fr,slug),product_images(url,sort_order),product_variants(id,label,price,original_price,stock,sort_order)")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
