@@ -61,7 +61,15 @@ const initial: State = {
   notes: "",
 };
 
-export function OrderForm({ product }: { product: Product }) {
+export function OrderForm({
+  product,
+  variantId: controlledVariantId,
+  onVariantIdChange,
+}: {
+  product: Product;
+  variantId?: string | null;
+  onVariantIdChange?: (id: string | null) => void;
+}) {
   const { t, locale } = useLocale();
   const [form, setForm] = useState<State>(initial);
   const [submitting, setSubmitting] = useState(false);
@@ -71,8 +79,14 @@ export function OrderForm({ product }: { product: Product }) {
   const sortedVariants = hasVariants
     ? [...product.variants!].sort((a, b) => a.sort_order - b.sort_order)
     : [];
+  const isControlled = controlledVariantId !== undefined && !!onVariantIdChange;
+  const activeVariantId = isControlled ? controlledVariantId ?? null : form.variant_id;
+  const setVariantId = (id: string | null) => {
+    if (isControlled) onVariantIdChange!(id);
+    else setForm({ ...form, variant_id: id });
+  };
   const selectedVariant = hasVariants
-    ? sortedVariants.find((v) => v.id === form.variant_id) ?? null
+    ? sortedVariants.find((v) => v.id === activeVariantId) ?? null
     : null;
 
   const unitPrice = selectedVariant ? selectedVariant.price : product.price;
