@@ -181,12 +181,12 @@ export function OrderForm({
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-elegant">
       <h3 className="text-lg font-bold">{t({ ar: "طلب المنتج", fr: "Commander ce produit" })}</h3>
 
-      {hasVariants && (
+      {hasVariants && !isControlled && (
         <div className="space-y-2">
           <Label>{t({ ar: "اختر أحد الخيارات", fr: "Choisir une option" })} *</Label>
           <select
-            value={form.variant_id ?? ""}
-            onChange={(e) => setForm({ ...form, variant_id: e.target.value || null })}
+            value={activeVariantId ?? ""}
+            onChange={(e) => setVariantId(e.target.value || null)}
             className="w-full rounded-lg border-2 border-border bg-card px-3 py-2.5 text-sm font-semibold focus:border-primary focus:outline-none"
             required
           >
