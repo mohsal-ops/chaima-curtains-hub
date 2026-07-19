@@ -321,12 +321,57 @@ export type Database = {
           },
         ]
       }
+      product_variants: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          original_price: number | null
+          price: number
+          product_id: string
+          sort_order: number
+          stock: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          original_price?: number | null
+          price?: number
+          product_id: string
+          sort_order?: number
+          stock?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          original_price?: number | null
+          price?: number
+          product_id?: string
+          sort_order?: number
+          stock?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
           created_at: string
           description_ar: string | null
           description_fr: string | null
+          has_variants: boolean
           id: string
           is_active: boolean
           is_featured: boolean
@@ -336,6 +381,7 @@ export type Database = {
           meta_title_fr: string | null
           name_ar: string
           name_fr: string
+          original_price: number | null
           price: number
           sizes: string[]
           slug: string
@@ -347,6 +393,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_fr?: string | null
+          has_variants?: boolean
           id?: string
           is_active?: boolean
           is_featured?: boolean
@@ -356,6 +403,7 @@ export type Database = {
           meta_title_fr?: string | null
           name_ar: string
           name_fr: string
+          original_price?: number | null
           price?: number
           sizes?: string[]
           slug: string
@@ -367,6 +415,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_fr?: string | null
+          has_variants?: boolean
           id?: string
           is_active?: boolean
           is_featured?: boolean
@@ -376,6 +425,7 @@ export type Database = {
           meta_title_fr?: string | null
           name_ar?: string
           name_fr?: string
+          original_price?: number | null
           price?: number
           sizes?: string[]
           slug?: string
