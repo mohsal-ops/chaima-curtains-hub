@@ -67,7 +67,16 @@ export function OrderForm({ product }: { product: Product }) {
   const [submitting, setSubmitting] = useState(false);
   const [successNumber, setSuccessNumber] = useState<string | null>(null);
 
-  const total = product.price * form.quantity;
+  const hasVariants = !!product.has_variants && !!product.variants && product.variants.length > 0;
+  const sortedVariants = hasVariants
+    ? [...product.variants!].sort((a, b) => a.sort_order - b.sort_order)
+    : [];
+  const selectedVariant = hasVariants
+    ? sortedVariants.find((v) => v.id === form.variant_id) ?? null
+    : null;
+
+  const unitPrice = selectedVariant ? selectedVariant.price : product.price;
+  const total = unitPrice * form.quantity;
 
   if (successNumber) {
     return (
@@ -79,7 +88,7 @@ export function OrderForm({ product }: { product: Product }) {
         <p className="mt-2 text-muted-foreground">{t({ ar: "رقم الطلب", fr: "Numéro de commande" })}</p>
         <p className="mt-1 text-2xl font-mono font-bold text-primary" dir="ltr">{successNumber}</p>
         <div className="mt-4 inline-block rounded-lg bg-secondary/50 px-4 py-2 text-sm">
-          {form.quantity} × {formatPrice(product.price, locale)} ={" "}
+          {form.quantity} × {formatPrice(unitPrice, locale)} ={" "}
           <strong className="text-primary">{formatPrice(total, locale)}</strong>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
@@ -95,7 +104,7 @@ export function OrderForm({ product }: { product: Product }) {
     );
   }
 
-  const hasSizes = !!product.sizes && product.sizes.length > 0;
+  const hasSizes = !hasVariants && !!product.sizes && product.sizes.length > 0;
   const valid =
     form.customer_name.trim().length >= 2 &&
     PHONE_RE.test(form.customer_phone) &&
@@ -104,6 +113,7 @@ export function OrderForm({ product }: { product: Product }) {
     form.city_id !== null &&
     form.quantity >= 1 &&
     (!hasSizes || !!form.size) &&
+    (!hasVariants || !!selectedVariant) &&
     (form.delivery_type === "office" || form.address.trim().length > 0);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -115,29 +125,33 @@ export function OrderForm({ product }: { product: Product }) {
       if (numErr || !numData) throw numErr ?? new Error("number");
       const orderNumber = numData as unknown as string;
 
+      const variantLabel = selectedVariant?.label ?? form.size ?? null;
       const { error } = await supabase.from("orders").insert({
         order_number: orderNumber,
         product_id: product.id,
         product_snapshot: {
           name_ar: product.name_ar,
           name_fr: product.name_fr,
-          price: product.price,
+          price: unitPrice,
           image_url: product.cover_url,
-          size: form.size,
+          size: variantLabel,
+          variant_id: selectedVariant?.id ?? null,
+          variant_label: selectedVariant?.label ?? null,
         },
         customer_name: form.customer_name.trim(),
         customer_phone: form.customer_phone,
         customer_email: form.customer_email.trim() || null,
         quantity: form.quantity,
-        unit_price: product.price,
+        unit_price: unitPrice,
         total_price: total,
         delivery_type: form.delivery_type,
         wilaya_id: form.wilaya_id,
         city_id: form.city_id,
         address: form.address.trim() || null,
-        notes: [form.size ? `${t({ ar: "الطول", fr: "Longueur" })}: ${form.size}` : null, form.notes.trim() || null]
-          .filter(Boolean)
-          .join(" — ") || null,
+        notes: [
+          variantLabel ? `${t({ ar: "الخيار", fr: "Option" })}: ${variantLabel}` : null,
+          form.notes.trim() || null,
+        ].filter(Boolean).join(" — ") || null,
       });
       if (error) throw error;
       setSuccessNumber(orderNumber);
@@ -152,6 +166,31 @@ export function OrderForm({ product }: { product: Product }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-elegant">
       <h3 className="text-lg font-bold">{t({ ar: "طلب المنتج", fr: "Commander ce produit" })}</h3>
+
+      {hasVariants && (
+        <div className="space-y-2">
+          <Label>{t({ ar: "اختر أحد الخيارات", fr: "Choisir une option" })} *</Label>
+          <select
+            value={form.variant_id ?? ""}
+            onChange={(e) => setForm({ ...form, variant_id: e.target.value || null })}
+            className="w-full rounded-lg border-2 border-border bg-card px-3 py-2.5 text-sm font-semibold focus:border-primary focus:outline-none"
+            required
+          >
+            <option value="" disabled>
+              {t({ ar: "— اختر —", fr: "— Sélectionner —" })}
+            </option>
+            {sortedVariants.map((v) => {
+              const outOfStock = v.stock != null && v.stock <= 0;
+              return (
+                <option key={v.id} value={v.id} disabled={outOfStock}>
+                  {v.label} — {formatPrice(v.price, locale)}
+                  {outOfStock ? ` (${t({ ar: "نفذ", fr: "épuisé" })})` : ""}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      )}
 
       {hasSizes && (
         <div className="space-y-2">
@@ -178,6 +217,8 @@ export function OrderForm({ product }: { product: Product }) {
           </div>
         </div>
       )}
+
+
 
 
       <div className="grid gap-4 sm:grid-cols-2">
