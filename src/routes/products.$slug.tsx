@@ -178,7 +178,68 @@ function ProductDetailPage() {
             </span>
           )}
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{name}</h1>
-          <p className="text-3xl font-bold text-primary">{formatPrice(p.price, locale)}</p>
+
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              {priceRange ? (
+                <p className="text-3xl font-bold text-primary">
+                  {formatPrice(priceRange.min, locale)}
+                  {priceRange.max !== priceRange.min && <> – {formatPrice(priceRange.max, locale)}</>}
+                </p>
+              ) : (
+                <p className="text-3xl font-bold text-primary">{formatPrice(displayPrice, locale)}</p>
+              )}
+              {hasDiscount && !priceRange && (
+                <>
+                  <span className="text-lg text-muted-foreground line-through">
+                    {formatPrice(displayOriginal!, locale)}
+                  </span>
+                  <span className="rounded-md bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
+                    -{discountPct}%
+                  </span>
+                </>
+              )}
+            </div>
+            {hasDiscount && !priceRange && (
+              <span className="inline-block rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
+                {t({ ar: "تخفيض!", fr: "Promo !" })}
+              </span>
+            )}
+          </div>
+
+          {hasVariants && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t({ ar: "اختر الطول", fr: "Choisir la longueur" })} *
+              </label>
+              <select
+                value={selectedVariantId ?? ""}
+                onChange={(e) => setSelectedVariantId(e.target.value || null)}
+                className="w-full rounded-lg border-2 border-border bg-card px-3 py-2.5 text-sm font-semibold focus:border-primary focus:outline-none"
+              >
+                <option value="" disabled>
+                  {t({ ar: "— اختر أحد الخيارات —", fr: "— Choisir une option —" })}
+                </option>
+                {variants.map((v) => {
+                  const outOfStock = v.stock != null && v.stock <= 0;
+                  return (
+                    <option key={v.id} value={v.id} disabled={outOfStock}>
+                      {v.label} — {formatPrice(v.price, locale)}
+                      {outOfStock ? ` (${t({ ar: "نفذ", fr: "épuisé" })})` : ""}
+                    </option>
+                  );
+                })}
+              </select>
+              {!selectedVariant && (
+                <p className="text-xs text-muted-foreground">
+                  {t({
+                    ar: "الرجاء اختيار خيار قبل إتمام الطلب",
+                    fr: "Veuillez choisir une option pour continuer",
+                  })}
+                </p>
+              )}
+            </div>
+          )}
 
           {description && (
             <div className="prose prose-sm max-w-none text-foreground/85 leading-relaxed">
@@ -216,8 +277,12 @@ function ProductDetailPage() {
               name_fr: p.name_fr,
               price: Number(p.price),
               cover_url: cover,
-              sizes: (p as any).sizes ?? [],
+              sizes: hasVariants ? [] : ((p as any).sizes ?? []),
+              has_variants: hasVariants,
+              variants,
             }}
+            variantId={hasVariants ? selectedVariantId : undefined}
+            onVariantIdChange={hasVariants ? setSelectedVariantId : undefined}
           />
         </div>
       </div>
