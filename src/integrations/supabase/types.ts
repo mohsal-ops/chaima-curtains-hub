@@ -442,6 +442,50 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          created_at: string
+          customer_name: string
+          id: string
+          is_approved: boolean
+          photo_url: string | null
+          product_id: string
+          rating: number
+          review_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          id?: string
+          is_approved?: boolean
+          photo_url?: string | null
+          product_id: string
+          rating: number
+          review_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          id?: string
+          is_approved?: boolean
+          photo_url?: string | null
+          product_id?: string
+          rating?: number
+          review_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           group_name: string | null
@@ -497,21 +541,30 @@ export type Database = {
         Row: {
           code: string
           created_at: string
+          delivery_fee_home: number
+          delivery_fee_office: number
           id: number
+          is_free_delivery: boolean
           name_ar: string
           name_fr: string
         }
         Insert: {
           code: string
           created_at?: string
+          delivery_fee_home?: number
+          delivery_fee_office?: number
           id?: number
+          is_free_delivery?: boolean
           name_ar: string
           name_fr: string
         }
         Update: {
           code?: string
           created_at?: string
+          delivery_fee_home?: number
+          delivery_fee_office?: number
           id?: number
+          is_free_delivery?: boolean
           name_ar?: string
           name_fr?: string
         }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale } from "@/lib/i18n";
 import { useSettings } from "@/hooks/useSettings";
 import { cn } from "@/lib/utils";
+import { CartIcon } from "./CartIcon";
 
 export function Navbar() {
   const { t, locale, toggle } = useLocale();
@@ -23,9 +24,11 @@ export function Navbar() {
   const logoUrl = rawLogoUrl && !rawLogoUrl.includes("/__l5e/assets-v1/") ? rawLogoUrl : "/tringle-logo.jpg";
 
 
-  const navLinks = [
+  const navLinks: Array<{ to: string; label: string }> = [
     { to: "/", label: t({ ar: "الرئيسية", fr: "Accueil" }) },
     { to: "/products", label: t({ ar: "المنتجات", fr: "Produits" }) },
+    { to: "/shipping", label: t({ ar: "الشحن والتسليم", fr: "Livraison" }) },
+    { to: "/contact", label: t({ ar: "اتصل بنا", fr: "Contact" }) },
   ];
 
   return (
@@ -50,7 +53,7 @@ export function Navbar() {
         </Link>
 
 
-        <nav className="hidden md:flex items-center gap-2">
+        <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((l) => (
             <Link
               key={l.to}
@@ -62,25 +65,36 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          <a
+            href="/#book"
+            className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+          >
+            {t({ ar: "احجز زيارة", fr: "Réserver une visite" })}
+          </a>
           <button
             onClick={toggle}
-            className="ms-2 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+            className="ms-2 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
             aria-label="Change language"
           >
             <Languages className="h-4 w-4" />
-            {locale === "ar" ? "Français" : "العربية"}
+            {locale === "ar" ? "FR" : "AR"}
           </button>
         </nav>
 
-        <button
-          className="md:hidden grid place-items-center h-10 w-10 rounded-md border border-border text-foreground"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Open menu"
-          aria-expanded={open}
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <CartIcon />
+          <button
+            className="md:hidden grid place-items-center h-10 w-10 rounded-md border border-border text-foreground"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Open menu"
+            aria-expanded={open}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
+
+
 
       {open && (
         <div className="md:hidden border-t border-border bg-background animate-in slide-in-from-top duration-200">
@@ -97,6 +111,13 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <a
+              href="/#book"
+              onClick={() => setOpen(false)}
+              className="rounded-md px-4 py-3 text-sm font-medium text-foreground hover:bg-primary-light"
+            >
+              {t({ ar: "احجز زيارة", fr: "Réserver une visite" })}
+            </a>
             <button
               onClick={() => {
                 toggle();
