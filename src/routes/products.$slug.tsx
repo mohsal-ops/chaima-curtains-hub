@@ -1,16 +1,21 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, Copy, MessageCircle } from "lucide-react";
+import { ChevronLeft, ShoppingCart, MessageCircle, Truck, ShieldCheck, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { ProductCard, ProductCardSkeleton } from "@/components/site/ProductCard";
-import { OrderForm, type Variant } from "@/components/site/OrderForm";
+import { ProductCard } from "@/components/site/ProductCard";
+import { ProductGallery } from "@/components/site/product/ProductGallery";
+import { QuantityStepper } from "@/components/site/product/QuantityStepper";
+import { QuickOrderForm } from "@/components/site/product/QuickOrderForm";
+import { ReviewsSection, useProductReviews, Stars } from "@/components/site/product/Reviews";
 import { Button } from "@/components/ui/button";
 import { useLocale, pickLocalized } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { useCart } from "@/lib/cart";
+import { useSettings } from "@/hooks/useSettings";
+import type { Variant } from "@/components/site/OrderForm";
 
 export const Route = createFileRoute("/products/$slug")({
   component: ProductDetailPage,
@@ -18,17 +23,13 @@ export const Route = createFileRoute("/products/$slug")({
     <SiteLayout>
       <div className="mx-auto max-w-2xl px-4 py-24 text-center">
         <h1 className="text-3xl font-bold">المنتج غير موجود / Produit introuvable</h1>
-        <Button asChild className="mt-6">
-          <Link to="/products">العودة للمنتجات / Retour aux produits</Link>
-        </Button>
+        <Button asChild className="mt-6"><Link to="/products">Retour</Link></Button>
       </div>
     </SiteLayout>
   ),
   errorComponent: ({ error }) => (
     <SiteLayout>
-      <div className="mx-auto max-w-2xl px-4 py-24 text-center text-destructive">
-        <p>{error.message}</p>
-      </div>
+      <div className="mx-auto max-w-2xl px-4 py-24 text-center text-destructive"><p>{error.message}</p></div>
     </SiteLayout>
   ),
 });
@@ -36,9 +37,12 @@ export const Route = createFileRoute("/products/$slug")({
 function ProductDetailPage() {
   const { slug } = Route.useParams();
   const { t, locale } = useLocale();
-  const [activeImg, setActiveImg] = useState(0);
+  const addToCart = useCart((s) => s.add);
+  const { get } = useSettings();
+  const wa = get("whatsapp_number", "+213561238016").replace(/\D/g, "");
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
 
   const productQ = useQuery({
     queryKey: ["product", slug],
@@ -61,7 +65,7 @@ function ProductDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,slug,name_ar,name_fr,price,created_at,categories(name_ar,name_fr),product_images(url,sort_order)")
+        .select("id,slug,name_ar,name_fr,price,created_at,categories(name_ar,name_fr),product_images(url,sort_order),product_variants(id,label,price,original_price,stock,sort_order),has_variants,original_price")
         .eq("is_active", true)
         .eq("category_id", productQ.data!.category_id!)
         .neq("id", productQ.data!.id)
@@ -71,42 +75,42 @@ function ProductDetailPage() {
     },
   });
 
-  if (productQ.isLoading) {
+  const reviewsQ = useProductReviews(productQ.data?.id ?? "");
+
+  if (productQ.isLoading || !productQ.data) {
     return (
       <SiteLayout>
-        <div className="mx-auto max-w-6xl px-4 py-10 grid gap-10 md:grid-cols-2">
-          <ProductCardSkeleton />
-          <div className="space-y-4">
-            <div className="h-8 w-2/3 animate-pulse rounded bg-muted" />
-            <div className="h-6 w-1/3 animate-pulse rounded bg-muted" />
-            <div className="h-32 animate-pulse rounded bg-muted" />
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="grid gap-10 md:grid-cols-2">
+            <div className="aspect-square animate-pulse rounded-2xl bg-muted" />
+            <div className="space-y-4">
+              <div className="h-8 w-2/3 animate-pulse rounded bg-muted" />
+              <div className="h-6 w-1/3 animate-pulse rounded bg-muted" />
+              <div className="h-32 animate-pulse rounded bg-muted" />
+            </div>
           </div>
         </div>
       </SiteLayout>
     );
   }
 
-  const p = productQ.data!;
+  const p = productQ.data;
   const images = (p.product_images ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
   const name = pickLocalized(p as unknown as Record<string, unknown>, "name", locale);
   const description = pickLocalized(p as unknown as Record<string, unknown>, "description", locale);
   const categoryName = p.categories ? pickLocalized(p.categories as unknown as Record<string, unknown>, "name", locale) : null;
-
-  const cover = images[activeImg]?.url ?? images[0]?.url ?? null;
 
   const rawVariants = ((p as any).product_variants ?? []) as Array<{
     id: string; label: string; price: number | string; original_price: number | string | null; stock: number | null; sort_order: number;
   }>;
   const variants: Variant[] = rawVariants
     .map((v) => ({
-      id: v.id,
-      label: v.label,
-      price: Number(v.price),
+      id: v.id, label: v.label, price: Number(v.price),
       original_price: v.original_price != null ? Number(v.original_price) : null,
-      stock: v.stock,
-      sort_order: v.sort_order,
+      stock: v.stock, sort_order: v.sort_order,
     }))
     .sort((a, b) => a.sort_order - b.sort_order);
+
   const hasVariants = !!(p as any).has_variants && variants.length > 0;
   const selectedVariant = hasVariants ? variants.find((v) => v.id === selectedVariantId) ?? null : null;
 
@@ -117,67 +121,73 @@ function ProductDetailPage() {
   const hasDiscount = displayOriginal != null && displayOriginal > displayPrice;
   const discountPct = hasDiscount ? Math.round(((displayOriginal! - displayPrice) / displayOriginal!) * 100) : 0;
   const priceRange = hasVariants && !selectedVariant
-    ? {
-        min: Math.min(...variants.map((v) => v.price)),
-        max: Math.max(...variants.map((v) => v.price)),
-      }
+    ? { min: Math.min(...variants.map((v) => v.price)), max: Math.max(...variants.map((v) => v.price)) }
     : null;
+
+  const cover = images[0]?.url ?? null;
+  const reviews = reviewsQ.data ?? [];
+  const avgRating = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+
+  const canOrder = !hasVariants || !!selectedVariant;
+
+  const handleAddToCart = () => {
+    if (!canOrder) {
+      toast.error(t({ ar: "الرجاء اختيار خيار أولا", fr: "Veuillez choisir une option" }));
+      return;
+    }
+    addToCart({
+      id: `${p.id}:${selectedVariant?.id ?? "default"}`,
+      product_id: p.id,
+      variant_id: selectedVariant?.id ?? null,
+      variant_label: selectedVariant?.label ?? null,
+      slug: p.slug,
+      name_ar: p.name_ar,
+      name_fr: p.name_fr,
+      price: displayPrice,
+      image_url: cover,
+      qty,
+    });
+    toast.success(t({ ar: "تمت الإضافة إلى السلة", fr: "Ajouté au panier" }));
+  };
+
+  const whatsappHref = () => {
+    const line = `${name}${selectedVariant ? ` — ${selectedVariant.label}` : ""} × ${qty}`;
+    const total = displayPrice * qty;
+    const body = t({
+      ar: `مرحبا، أريد طلب:\n${line}\nالمجموع: ${formatPrice(total, "ar")}\nالرابط: ${typeof window !== "undefined" ? window.location.href : ""}`,
+      fr: `Bonjour, je souhaite commander :\n${line}\nTotal : ${formatPrice(total, "fr")}\nLien : ${typeof window !== "undefined" ? window.location.href : ""}`,
+    });
+    return `https://wa.me/${wa}?text=${encodeURIComponent(body)}`;
+  };
 
   return (
     <SiteLayout>
       <div className="mx-auto max-w-6xl px-4 py-6">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-primary">{t({ ar: "الرئيسية", fr: "Accueil" })}</Link>
           <ChevronLeft className="h-3 w-3 rtl:rotate-180" />
           <Link to="/products" className="hover:text-primary">{t({ ar: "المنتجات", fr: "Produits" })}</Link>
-          {categoryName && (
-            <>
-              <ChevronLeft className="h-3 w-3 rtl:rotate-180" />
-              <span>{categoryName}</span>
-            </>
-          )}
+          {categoryName && (<><ChevronLeft className="h-3 w-3 rtl:rotate-180" /><span>{categoryName}</span></>)}
           <ChevronLeft className="h-3 w-3 rtl:rotate-180" />
           <span className="text-foreground font-medium truncate">{name}</span>
         </nav>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 pb-16 grid gap-10 md:grid-cols-2">
-        {/* Gallery */}
-        <div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-            {cover ? (
-              <img src={cover} alt={name} className="h-full max-h-[500px] w-full object-contain bg-white" />
-            ) : (
-              <div className="aspect-square grid place-items-center bg-primary-light text-6xl">🪟</div>
-            )}
-          </div>
-          {images.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto">
-              {images.map((img, i) => (
-                <button
-                  key={img.url}
-                  onClick={() => setActiveImg(i)}
-                  className={cn(
-                    "h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",
-                    activeImg === i ? "border-primary" : "border-border",
-                  )}
-                >
-                  <img src={img.url} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="mx-auto max-w-6xl px-4 pb-10 grid gap-10 md:grid-cols-2">
+        <ProductGallery images={images.map((i) => ({ url: i.url }))} alt={name} />
 
-        {/* Info + Order */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {categoryName && (
-            <span className="inline-block rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary">
-              {categoryName}
-            </span>
+            <span className="inline-block rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary">{categoryName}</span>
           )}
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{name}</h1>
+
+          <div className="flex items-center gap-3">
+            <Stars value={avgRating} />
+            <a href="#reviews" className="text-sm text-muted-foreground hover:text-primary">
+              ({reviews.length} {t({ ar: "تقييم", fr: "avis" })})
+            </a>
+          </div>
 
           <div className="space-y-2">
             <div className="flex items-baseline gap-3 flex-wrap">
@@ -191,12 +201,8 @@ function ProductDetailPage() {
               )}
               {hasDiscount && !priceRange && (
                 <>
-                  <span className="text-lg text-muted-foreground line-through">
-                    {formatPrice(displayOriginal!, locale)}
-                  </span>
-                  <span className="rounded-md bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">
-                    -{discountPct}%
-                  </span>
+                  <span className="text-lg text-muted-foreground line-through">{formatPrice(displayOriginal!, locale)}</span>
+                  <span className="rounded-md bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground">-{discountPct}%</span>
                 </>
               )}
             </div>
@@ -209,93 +215,79 @@ function ProductDetailPage() {
 
           {hasVariants && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">
-                {t({ ar: "اختر الطول", fr: "Choisir la longueur" })} *
-              </label>
+              <label className="text-sm font-medium">{t({ ar: "اختر الطول", fr: "Choisir la longueur" })} *</label>
               <select
                 value={selectedVariantId ?? ""}
                 onChange={(e) => setSelectedVariantId(e.target.value || null)}
                 className="w-full rounded-lg border-2 border-border bg-card px-3 py-2.5 text-sm font-semibold focus:border-primary focus:outline-none"
               >
-                <option value="" disabled>
-                  {t({ ar: "— اختر أحد الخيارات —", fr: "— Choisir une option —" })}
-                </option>
+                <option value="" disabled>{t({ ar: "— اختر أحد الخيارات —", fr: "— Choisir une option —" })}</option>
                 {variants.map((v) => {
-                  const outOfStock = v.stock != null && v.stock <= 0;
+                  const oos = v.stock != null && v.stock <= 0;
                   return (
-                    <option key={v.id} value={v.id} disabled={outOfStock}>
-                      {v.label} — {formatPrice(v.price, locale)}
-                      {outOfStock ? ` (${t({ ar: "نفذ", fr: "épuisé" })})` : ""}
+                    <option key={v.id} value={v.id} disabled={oos}>
+                      {v.label} — {formatPrice(v.price, locale)}{oos ? ` (${t({ ar: "نفذ", fr: "épuisé" })})` : ""}
                     </option>
                   );
                 })}
               </select>
-              {!selectedVariant && (
-                <p className="text-xs text-muted-foreground">
-                  {t({
-                    ar: "الرجاء اختيار خيار قبل إتمام الطلب",
-                    fr: "Veuillez choisir une option pour continuer",
-                  })}
-                </p>
-              )}
             </div>
           )}
 
-          {description && (
-            <div className="prose prose-sm max-w-none text-foreground/85 leading-relaxed">
-              <p>{description}</p>
-            </div>
-          )}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t({ ar: "الكمية", fr: "Quantité" })}</label>
+            <QuantityStepper value={qty} onChange={setQty} />
+          </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                toast.success(t({ ar: "تم نسخ الرابط", fr: "Lien copié" }), { icon: <Check className="h-4 w-4" /> });
-              }}
-            >
-              <Copy className="me-2 h-4 w-4" />
-              {t({ ar: "نسخ الرابط", fr: "Copier" })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <Button size="lg" onClick={handleAddToCart} disabled={!canOrder}>
+              <ShoppingCart className="me-2 h-5 w-5" />
+              {t({ ar: "إضافة إلى السلة", fr: "Ajouter au panier" })}
             </Button>
-            <Button asChild variant="outline" size="sm">
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(name + " — " + window.location.href)}`}
-                target="_blank" rel="noopener noreferrer"
-              >
-                <MessageCircle className="me-2 h-4 w-4" />
-                WhatsApp
+            <Button asChild size="lg" variant="outline" className="border-[#25D366] text-[#128C7E] hover:bg-[#25D366]/10">
+              <a href={canOrder ? whatsappHref() : undefined} target="_blank" rel="noopener noreferrer" onClick={(e) => { if (!canOrder) e.preventDefault(); }}>
+                <MessageCircle className="me-2 h-5 w-5" />
+                {t({ ar: "اطلب عبر واتساب", fr: "Commander via WhatsApp" })}
               </a>
             </Button>
           </div>
 
-          <OrderForm
-            product={{
-              id: p.id,
-              name_ar: p.name_ar,
-              name_fr: p.name_fr,
-              price: Number(p.price),
-              cover_url: cover,
-              sizes: hasVariants ? [] : ((p as any).sizes ?? []),
-              has_variants: hasVariants,
-              variants,
-            }}
-            variantId={hasVariants ? selectedVariantId : undefined}
-            onVariantIdChange={hasVariants ? setSelectedVariantId : undefined}
+          <ul className="grid gap-2 text-sm pt-2">
+            <li className="flex items-center gap-2 text-muted-foreground"><Truck className="h-4 w-4 text-primary" /> {t({ ar: "توصيل لجميع الولايات", fr: "Livraison dans toutes les wilayas" })}</li>
+            <li className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-primary" /> {t({ ar: "الدفع عند الاستلام", fr: "Paiement à la livraison" })}</li>
+            <li className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4 text-primary" /> {t({ ar: "خدمة عملاء متاحة", fr: "Service client disponible" })}</li>
+          </ul>
+
+          <QuickOrderForm
+            productId={p.id}
+            name_ar={p.name_ar}
+            name_fr={p.name_fr}
+            price={Number(p.price)}
+            image_url={cover}
+            variantId={selectedVariantId}
+            variant={selectedVariant}
+            hasVariants={hasVariants}
           />
         </div>
       </div>
 
-      {/* Related */}
+      {description && (
+        <section className="mx-auto max-w-6xl px-4 py-8 border-t border-border">
+          <h2 className="text-2xl font-bold">{t({ ar: "الوصف", fr: "Description" })}</h2>
+          <div className="prose prose-sm max-w-none mt-4 text-foreground/85 leading-relaxed whitespace-pre-wrap">
+            {description}
+          </div>
+        </section>
+      )}
+
+      <ReviewsSection productId={p.id} />
+
       {(relatedQ.data ?? []).length > 0 && (
         <section className="bg-secondary/30 py-16">
           <div className="mx-auto max-w-7xl px-4">
-            <h2 className="mb-8 text-2xl font-bold text-foreground">
-              {t({ ar: "منتجات قد تعجبك", fr: "Vous aimerez aussi" })}
-            </h2>
+            <h2 className="mb-8 text-2xl font-bold text-foreground">{t({ ar: "قد يعجبك أيضا", fr: "Vous aimerez aussi" })}</h2>
             <div className="grid gap-5 grid-cols-2 md:grid-cols-4">
-              {relatedQ.data!.map((rp) => <ProductCard key={rp.id} product={rp} />)}
+              {relatedQ.data!.map((rp) => <ProductCard key={rp.id} product={rp as any} />)}
             </div>
           </div>
         </section>
