@@ -196,7 +196,7 @@ function ProductDetailPage() {
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{name}</h1>
 
           <div className="flex items-center gap-3">
-            <Stars value={avgRating} />
+            <Stars value={avgRating > 0 ? avgRating : 5} />
             <a href="#reviews" className="text-sm text-muted-foreground hover:text-primary">
               ({reviews.length} {t({ ar: "تقييم", fr: "avis" })})
             </a>
@@ -226,11 +226,6 @@ function ProductDetailPage() {
             )}
           </div>
 
-          <ul className="grid gap-2 text-sm pt-2">
-            <li className="flex items-center gap-2 text-muted-foreground"><Truck className="h-4 w-4 text-primary" /> {t({ ar: "توصيل لجميع الولايات", fr: "Livraison dans toutes les wilayas" })}</li>
-            <li className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-primary" /> {t({ ar: "الدفع عند الاستلام", fr: "Paiement à la livraison" })}</li>
-            <li className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4 text-primary" /> {t({ ar: "خدمة عملاء متاحة", fr: "Service client disponible" })}</li>
-          </ul>
 
           <QuickOrderForm
             productId={p.id}
