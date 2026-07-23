@@ -235,7 +235,7 @@ function ProductDetailPage() {
             image_url={cover}
             variantId={selectedVariantId}
             variant={selectedVariant}
-            hasVariants={hasVariants}
+            hasVariants={hasSelectableSizes}
             variants={variants}
             onVariantChange={setSelectedVariantId}
             onAddToCart={handleAddToCart}
