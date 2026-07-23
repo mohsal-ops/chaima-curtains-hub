@@ -141,7 +141,7 @@ function ProductDetailPage() {
   const reviews = reviewsQ.data ?? [];
   const avgRating = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
 
-  const canOrder = !hasVariants || !!selectedVariant;
+  const canOrder = !hasSelectableSizes || !!selectedVariant;
 
   const handleAddToCart = () => {
     if (!canOrder) {
