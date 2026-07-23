@@ -213,45 +213,6 @@ function ProductDetailPage() {
             )}
           </div>
 
-          {hasVariants && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t({ ar: "اختر الطول", fr: "Choisir la longueur" })} *</label>
-              <select
-                value={selectedVariantId ?? ""}
-                onChange={(e) => setSelectedVariantId(e.target.value || null)}
-                className="w-full rounded-lg border-2 border-border bg-card px-3 py-2.5 text-sm font-semibold focus:border-primary focus:outline-none"
-              >
-                <option value="" disabled>{t({ ar: "— اختر أحد الخيارات —", fr: "— Choisir une option —" })}</option>
-                {variants.map((v) => {
-                  const oos = v.stock != null && v.stock <= 0;
-                  return (
-                    <option key={v.id} value={v.id} disabled={oos}>
-                      {v.label} — {formatPrice(v.price, locale)}{oos ? ` (${t({ ar: "نفذ", fr: "épuisé" })})` : ""}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t({ ar: "الكمية", fr: "Quantité" })}</label>
-            <QuantityStepper value={qty} onChange={setQty} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <Button size="lg" onClick={handleAddToCart} disabled={!canOrder}>
-              <ShoppingCart className="me-2 h-5 w-5" />
-              {t({ ar: "إضافة إلى السلة", fr: "Ajouter au panier" })}
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-[#25D366] text-[#128C7E] hover:bg-[#25D366]/10">
-              <a href={canOrder ? whatsappHref() : undefined} target="_blank" rel="noopener noreferrer" onClick={(e) => { if (!canOrder) e.preventDefault(); }}>
-                <MessageCircle className="me-2 h-5 w-5" />
-                {t({ ar: "اطلب عبر واتساب", fr: "Commander via WhatsApp" })}
-              </a>
-            </Button>
-          </div>
-
           <ul className="grid gap-2 text-sm pt-2">
             <li className="flex items-center gap-2 text-muted-foreground"><Truck className="h-4 w-4 text-primary" /> {t({ ar: "توصيل لجميع الولايات", fr: "Livraison dans toutes les wilayas" })}</li>
             <li className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-primary" /> {t({ ar: "الدفع عند الاستلام", fr: "Paiement à la livraison" })}</li>
@@ -267,9 +228,15 @@ function ProductDetailPage() {
             variantId={selectedVariantId}
             variant={selectedVariant}
             hasVariants={hasVariants}
+            variants={variants}
+            onVariantChange={setSelectedVariantId}
+            onAddToCart={handleAddToCart}
+            whatsappHref={canOrder ? whatsappHref() : "#"}
+            canOrder={canOrder}
           />
         </div>
       </div>
+
 
       {description && (
         <section className="mx-auto max-w-6xl px-4 py-8 border-t border-border">
