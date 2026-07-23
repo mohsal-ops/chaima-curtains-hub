@@ -103,7 +103,7 @@ function ProductDetailPage() {
   const rawVariants = ((p as any).product_variants ?? []) as Array<{
     id: string; label: string; price: number | string; original_price: number | string | null; stock: number | null; sort_order: number;
   }>;
-  const variants: Variant[] = rawVariants
+  const realVariants: Variant[] = rawVariants
     .map((v) => ({
       id: v.id, label: v.label, price: Number(v.price),
       original_price: v.original_price != null ? Number(v.original_price) : null,
@@ -111,8 +111,21 @@ function ProductDetailPage() {
     }))
     .sort((a, b) => a.sort_order - b.sort_order);
 
-  const hasVariants = !!(p as any).has_variants && variants.length > 0;
-  const selectedVariant = hasVariants ? variants.find((v) => v.id === selectedVariantId) ?? null : null;
+  const productSizes = ((p as any).sizes ?? []) as string[];
+  const sizeVariants: Variant[] = productSizes.map((label, i) => ({
+    id: `size:${label}`,
+    label,
+    price: Number(p.price),
+    original_price: (p as any).original_price != null ? Number((p as any).original_price) : null,
+    stock: null,
+    sort_order: i,
+  }));
+
+  const hasVariants = !!(p as any).has_variants && realVariants.length > 0;
+  const variants: Variant[] = hasVariants ? realVariants : sizeVariants;
+  const hasSelectableSizes = hasVariants || sizeVariants.length > 0;
+  const selectedVariant = hasSelectableSizes ? variants.find((v) => v.id === selectedVariantId) ?? null : null;
+
 
   const displayPrice = selectedVariant ? selectedVariant.price : Number(p.price);
   const displayOriginal = selectedVariant
@@ -128,7 +141,7 @@ function ProductDetailPage() {
   const reviews = reviewsQ.data ?? [];
   const avgRating = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
 
-  const canOrder = !hasVariants || !!selectedVariant;
+  const canOrder = !hasSelectableSizes || !!selectedVariant;
 
   const handleAddToCart = () => {
     if (!canOrder) {
@@ -183,7 +196,7 @@ function ProductDetailPage() {
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{name}</h1>
 
           <div className="flex items-center gap-3">
-            <Stars value={avgRating} />
+            <Stars value={avgRating > 0 ? avgRating : 5} />
             <a href="#reviews" className="text-sm text-muted-foreground hover:text-primary">
               ({reviews.length} {t({ ar: "تقييم", fr: "avis" })})
             </a>
@@ -213,11 +226,6 @@ function ProductDetailPage() {
             )}
           </div>
 
-          <ul className="grid gap-2 text-sm pt-2">
-            <li className="flex items-center gap-2 text-muted-foreground"><Truck className="h-4 w-4 text-primary" /> {t({ ar: "توصيل لجميع الولايات", fr: "Livraison dans toutes les wilayas" })}</li>
-            <li className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4 text-primary" /> {t({ ar: "الدفع عند الاستلام", fr: "Paiement à la livraison" })}</li>
-            <li className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4 text-primary" /> {t({ ar: "خدمة عملاء متاحة", fr: "Service client disponible" })}</li>
-          </ul>
 
           <QuickOrderForm
             productId={p.id}
@@ -227,7 +235,7 @@ function ProductDetailPage() {
             image_url={cover}
             variantId={selectedVariantId}
             variant={selectedVariant}
-            hasVariants={hasVariants}
+            hasVariants={hasSelectableSizes}
             variants={variants}
             onVariantChange={setSelectedVariantId}
             onAddToCart={handleAddToCart}
