@@ -103,7 +103,7 @@ function ProductDetailPage() {
   const rawVariants = ((p as any).product_variants ?? []) as Array<{
     id: string; label: string; price: number | string; original_price: number | string | null; stock: number | null; sort_order: number;
   }>;
-  const variants: Variant[] = rawVariants
+  const realVariants: Variant[] = rawVariants
     .map((v) => ({
       id: v.id, label: v.label, price: Number(v.price),
       original_price: v.original_price != null ? Number(v.original_price) : null,
@@ -111,8 +111,21 @@ function ProductDetailPage() {
     }))
     .sort((a, b) => a.sort_order - b.sort_order);
 
-  const hasVariants = !!(p as any).has_variants && variants.length > 0;
-  const selectedVariant = hasVariants ? variants.find((v) => v.id === selectedVariantId) ?? null : null;
+  const productSizes = ((p as any).sizes ?? []) as string[];
+  const sizeVariants: Variant[] = productSizes.map((label, i) => ({
+    id: `size:${label}`,
+    label,
+    price: Number(p.price),
+    original_price: (p as any).original_price != null ? Number((p as any).original_price) : null,
+    stock: null,
+    sort_order: i,
+  }));
+
+  const hasVariants = !!(p as any).has_variants && realVariants.length > 0;
+  const variants: Variant[] = hasVariants ? realVariants : sizeVariants;
+  const hasSelectableSizes = hasVariants || sizeVariants.length > 0;
+  const selectedVariant = hasSelectableSizes ? variants.find((v) => v.id === selectedVariantId) ?? null : null;
+
 
   const displayPrice = selectedVariant ? selectedVariant.price : Number(p.price);
   const displayOriginal = selectedVariant
